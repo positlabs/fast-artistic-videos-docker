@@ -1,0 +1,29 @@
+{
+  "name": "fast-artistic-videos-docker",
+  "version": "1.0.0",
+  "description": "",
+  "main": "fav",
+  "scripts": {
+    "start": "docker run -td --cpus 2 -m 2G -v `pwd`:/io $(./dev/env DOCKER_TAG)",
+    "shell": "./dev/docker-shell.sh",
+    "kill": "docker kill $(docker ps -q)",
+    "build": "node ./dev/docker-build.js",
+    "push": "npm run gcloud:cluster:auth && docker push $(./dev/env DOCKER_TAG)",
+    "deploy": "npm run build && npm run push && npm run gcloud:deployment:update && npm run gcloud:deployment:get",
+    "gcloud:cluster:create": "gcloud container clusters create fav --zone us-central1-c",
+    "gcloud:cluster:auth": "gcloud container clusters get-credentials fav",
+    "gcloud:pool:create": "gcloud container node-pools create fav-pool --zone us-central1-c --cluster fav --num-nodes 1 --machine-type n1-standard-4 --disk-type pd-ssd --disk-size 128GB --accelerator type=nvidia-tesla-k80,count=1",
+    "gcloud:cluster:drivers": "kubectl apply -f https://raw.githubusercontent.com/GoogleCloudPlatform/container-engine-accelerators/stable/nvidia-driver-installer/cos/daemonset-preloaded.yaml",
+    "gcloud:deployment:update": "./dev/kube-deploy.js deployment.yaml && npm run gcloud:deployment:status",
+    "gcloud:deployment:expose": "kubectl expose deployment fav --type LoadBalancer --port 80 --target-port 8888",
+    "gcloud:deployment:get": "kubectl get service fav",
+    "gcloud:deployment:status": "kubectl rollout status deployment fav"
+  },
+  "author": "positlabs",
+  "dependencies": {
+    "glob": "^7.1.3",
+    "yargs": "^12.0.5",
+    "dotenv": "^6.0.0",
+    "js-yaml": "^3.12.0"
+  }
+}

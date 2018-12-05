@@ -1,0 +1,18 @@
+#!/usr/bin/env node
+
+/*
+
+    Uses dotenv and applies some defaults at runtime
+
+    Run via CLI 
+        get a value:
+            $ env.js VARNAME
+        list all vars:
+            $ env.js 
+*/ 
+
+const env = require('./env.js')
+
+// handle cli inputs
+if(process.argv[2]){ console.log(env[process.argv[2]]) }
+else { console.log(env) }

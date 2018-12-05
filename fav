@@ -1,0 +1,33 @@
+#!/usr/bin/env node
+
+const {spawn} = require('child_process')
+const glob = require('glob')
+// https://www.npmjs.com/package/yargs
+const yargs = require('yargs')
+
+yargs.command('help', 'about', () => {}, (argv) => {
+        console.log(`fav-cli v${VERSION}`)
+        console.log('To stylize a video, run something like "fav-cli stylize ./path/to/video.mp4 model_file_name.t7"')
+        console.log('Run "fav-cli list-models" to get a list of pretrained models.')
+    })
+    .command('list-models', 'list available pre-trained style models', () => {}, (argv) => {
+        const models = glob.sync('/fast-artistic-videos/models/*.t7')
+        console.log(models)
+    })
+    .command('stylize', 'apply style to a video', (yargs) => {
+        yargs.usage('stylize <video_file_in_cwd> <model_file_name>')
+    }, (argv) => {
+        console.log('stylize', argv)
+        const proc = spawn(
+            './stylizeVideo_flownet.sh', 
+            [`/io/${argv._[1]}`, `./models/${argv._[2]}`],
+            {cwd: '/fast-artistic-videos'}
+        )
+        proc.stdout.on('data', (str) => console.log(str))
+        proc.stderr.on('data', (str) => console.error(str))
+        proc.on('close', (code) => {
+            console.log(`child process exited with code ${code}`)
+            // TODO clean up based on flag
+        })
+    })
+    .argv
