@@ -34,7 +34,19 @@ In flownet2-docker/ run `./build.sh` to build the positlabs/flownet2 image.
 In the root, run `npm run build` to build the main image. It will be tagged based on the current gcloud project.
 
 
+## Deploy to Kubernetes Engine
+
+`npm run gcloud:cluster:create`: create a cluster
+
+`npm run gcloud:pool:delete-default`: delete the default (non-gpu) pool
+
+`npm run gcloud:pool:create`: create a new pool with gpu
+
+`npm run gcloud:cluster:drivers`: install nvidia drivers
 
 
+`npm run deploy`: build and deploy the image to your cluster
+
+``
 
 

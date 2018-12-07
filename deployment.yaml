@@ -2,8 +2,8 @@ apiVersion: extensions/v1beta1
 kind: Deployment
 metadata:
   labels:
-    app: style-transfer
-  name: style-transfer
+    app: fav
+  name: fav
   namespace: default
 spec:
   progressDeadlineSeconds: 600
@@ -11,7 +11,7 @@ spec:
   revisionHistoryLimit: 2
   selector:
     matchLabels:
-      app: style-transfer
+      app: fav
   strategy:
     rollingUpdate:
       maxSurge: 25%
@@ -21,12 +21,12 @@ spec:
     metadata:
       creationTimestamp: null
       labels:
-        app: style-transfer
+        app: fav
     spec:
       containers:
-        - image: gcr.io/project-id/image-name
+        - image: gcr.io/qa-ingress-ai-site/fast-artistic-videos-docker
           imagePullPolicy: Always
-          name: style-transfer
+          name: fav
           ports:
             - containerPort: 8338
               protocol: TCP
@@ -42,7 +42,7 @@ spec:
           terminationMessagePolicy: File
           env:
             - name: DATE
-              value: 2018-11-28T22:26:42.318Z
+              value: 2018-12-06T23:51:16.695Z
       dnsPolicy: ClusterFirst
       restartPolicy: Always
       schedulerName: default-scheduler

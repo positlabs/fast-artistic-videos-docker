@@ -63,12 +63,6 @@ ARG FAV_MODELS_ROOT
 ENV FAV_MODELS_ROOT=${FAV_MODELS_ROOT}
 
 # download pretrained models
-# TODO self host your own models (fast)
-# RUN cd /fast-artistic-videos/models && \
-#     curl $FAV_MODELS -o models.tar.gz && \
-#     tar xvzf models.tar.gz; rm models.tar.gz
-
-# download pretrained models
 RUN chmod +x /fast-artistic-videos/models/download_models.sh; \
     cd /fast-artistic-videos; \
     /fast-artistic-videos/models/download_models.sh ${FAV_MODELS_ROOT}
@@ -85,6 +79,10 @@ RUN curl "https://bootstrap.pypa.io/get-pip.py" -o "get-pip.py" && \
     pip install --upgrade protobuf --ignore-installed six && \
     rm get-pip.py
 
+# for some reason, torch needs to update even though we just installed it
+# this fixes borked outputs, as described in https://github.com/manuelruder/fast-artistic-videos/issues/7
+RUN cd /torch && ./update.sh;
+
 # add caffe to pythonpath
 ENV PYTHONPATH=/flownet2/flownet2/python/
 RUN chmod +x /fast-artistic-videos/stylizeVideo_flownet.sh
@@ -100,4 +98,5 @@ RUN export CLOUD_SDK_REPO="cloud-sdk-$(lsb_release -c -s)" && \
     apt-get update -y && apt-get install google-cloud-sdk -y
 
 # CMD [ "/app/fav-cli" ]
-CMD /bin/bash
+# CMD /bin/bash
+CMD tail -f /dev/null
