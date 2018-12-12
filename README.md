@@ -1,6 +1,6 @@
 # fast-artistic-videos-docker
 
-The goal of this project is to provide a docker image to run [fast-artistic-videos](https://github.com/manuelruder/fast-artistic-videos). It will give users a consistent (working) environment to build from.
+The goal of this project is to provide a docker image to run [fast-artistic-videos](https://github.com/manuelruder/fast-artistic-videos). It will give users a consistent, functional environment to build from.
 
 [![](./demo.gif)](https://www.youtube.com/watch?v=SKql5wkWz8E&t=3m26s)
 
@@ -31,7 +31,7 @@ Run `gcloud init` to log in and configure the gcloud CLI.
 
 In flownet2-docker/ run `./build.sh` to build the positlabs/flownet2 image.
 
-In the root, run `npm run build` to build the main image. It will be tagged based on the current gcloud project.
+In the root, run `npm run build` to build the main image. It will be tagged based on the current gcloud project. You can edit [env.js](https://github.com/positlabs/fast-artistic-videos-docker/blob/master/dev/env.js#L14) to change the tag.
 
 
 ## Deploy to Kubernetes Engine
@@ -44,9 +44,30 @@ In the root, run `npm run build` to build the main image. It will be tagged base
 
 `npm run gcloud:cluster:drivers`: install nvidia drivers
 
-
 `npm run deploy`: build and deploy the image to your cluster
 
-``
+## Connect to the GKE container
+
+Connect to the container via ssh. You can get a command by viewing the [compute engine instances](https://console.cloud.google.com/compute/instances) in the cloud console. 
+
+The container will be running in the background when deployed via npm scripts. You can connect to it and run commands internally. (This is largely for development purposes. In production, there would be a REST API or something similar - which would run the docker command.)
+
+Some useful paths:
+
+- `/io`: The volume for reads/writes. The `npm start` command will mount the current working directory to this volume so the container can read your input video, and save the output in the same directory.
+
+- `/flownet2`: flownet2 installation directory
+
+- `/fast-artistic-videos`: Slightly modified fork of [fast-artistic-videos](https://github.com/manuelruder/fast-artistic-videos). Makes the prebuilt model host configurable, and outputs to the /io directory
+
+- `/app`: Contents of this repo. There's a test video (mov_bbb.mp4), and a CLI tool (`/app/fav`) that will become the default command for running the container.
 
 
+
+## Run the container directly
+
+`npm run gcloud:cluster:auth` to connect kubectl to the cluster
+
+`kubectl get po` to find the pod id
+
+`kucbectl exec -it <pod_id> bash` to connect to the pod
