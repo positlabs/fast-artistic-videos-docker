@@ -91,6 +91,9 @@ RUN chmod +x /fast-artistic-videos/stylizeVideo_flownet.sh
 WORKDIR /app
 COPY ./ /app
 
+# flownet runner modified to recycle the caffe net. WAY faster.
+COPY run-flownet-many.py /flownet2/flownet2/scripts/run-flownet-many.py
+
 # gsutil for dev stuff
 RUN export CLOUD_SDK_REPO="cloud-sdk-$(lsb_release -c -s)" && \
     echo "deb http://packages.cloud.google.com/apt $CLOUD_SDK_REPO main" | tee -a /etc/apt/sources.list.d/google-cloud-sdk.list && \
