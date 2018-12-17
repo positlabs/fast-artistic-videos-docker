@@ -63,7 +63,6 @@ Some useful paths:
 - `/app`: Contents of this repo. There's a test video (mov_bbb.mp4), and a CLI tool (`/app/fav`) that will become the default command for running the container.
 
 
-
 ## Run the container directly
 
 `npm run gcloud:cluster:auth` to connect kubectl to the cluster
@@ -71,3 +70,14 @@ Some useful paths:
 `kubectl get po` to find the pod id
 
 `kucbectl exec -it <pod_id> bash` to connect to the pod
+
+
+### Example
+
+Inside the container, you can fake the container mount behavior by moving the video into the /io directory
+
+`cp /app/mov_bbb.mp4 /io/mov_bbb.mp4`
+
+Then you can run the command and stylize the video
+
+`/app/fav stylize mov_bbb.mp4 checkpoint-candy-video.t7`

@@ -17,14 +17,17 @@ yargs.command('help', 'about', () => {}, (argv) => {
     .command('stylize', 'apply style to a video', (yargs) => {
         yargs.usage('stylize <video_file_in_cwd> <model_file_name>')
     }, (argv) => {
-        console.log('stylize', argv)
         const proc = spawn(
-            './stylizeVideo_flownet.sh', 
-            [`/io/${argv._[1]}`, `./models/${argv._[2]}`],
+            'bash',
+            ['./stylizeVideo_flownet.sh', `/io/${argv._[1]}`, `./models/${argv._[2]}`],
             {cwd: '/fast-artistic-videos'}
         )
-        proc.stdout.on('data', (str) => console.log(str))
-        proc.stderr.on('data', (str) => console.error(str))
+        proc.stdin.write('\n')
+        proc.stdin.write('\n')
+        proc.stdin.write('\n')
+        proc.stdin.write('\n')
+        proc.stdout.on('data', (str) => console.log(str.toString()))
+        proc.stderr.on('data', (str) => console.error(str.toString()))
         proc.on('close', (code) => {
             console.log(`child process exited with code ${code}`)
             // TODO clean up based on flag
