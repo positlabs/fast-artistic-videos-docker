@@ -4,12 +4,20 @@ const {spawn} = require('child_process')
 const glob = require('glob')
 // https://www.npmjs.com/package/yargs
 const yargs = require('yargs')
+const VERSION = require('./package.json').version
 
-yargs.command('help', 'about', () => {}, (argv) => {
-        console.log(`fav-cli v${VERSION}`)
-        console.log('To stylize a video, run something like "fav-cli stylize ./path/to/video.mp4 model_file_name.t7"')
-        console.log('Run "fav-cli list-models" to get a list of pretrained models.')
-    })
+const about = () => {
+    console.log(`\nfav v${VERSION}`)
+    console.log(`\nTo stylize a video: 
+    $ fav stylize ./path/to/video.mp4 model_file_name.t7`)
+    console.log(`\nTo get a list of pretrained models: 
+    $ fav list-models
+    `)
+}
+
+yargs
+    .command('$0', 'about', () => {}, about)
+    .command('help', 'about', () => {}, about)
     .command('list-models', 'list available pre-trained style models', () => {}, (argv) => {
         const models = glob.sync('/fast-artistic-videos/models/*.t7')
         console.log(models)
@@ -22,10 +30,12 @@ yargs.command('help', 'about', () => {}, (argv) => {
             ['./stylizeVideo_flownet.sh', `/io/${argv._[1]}`, `./models/${argv._[2]}`],
             {cwd: '/fast-artistic-videos'}
         )
-        proc.stdin.write('\n')
-        proc.stdin.write('\n')
-        proc.stdin.write('\n')
-        proc.stdin.write('\n')
+        // accept defaults for all interactive prompts
+        // TODO expose these options
+        proc.stdin.write('\n') // which gpu
+        proc.stdin.write('\n') // which backend
+        proc.stdin.write('\n') // resolution
+        proc.stdin.write('\n') // overwrite existing
         proc.stdout.on('data', (str) => console.log(str.toString()))
         proc.stderr.on('data', (str) => console.error(str.toString()))
         proc.on('close', (code) => {
