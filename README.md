@@ -6,7 +6,7 @@ The goal of this project is to provide a docker image to run [fast-artistic-vide
 
 The goal is speed, so it uses flownet2, cudnn, and stnbhwd. You will need a machine with an nvidia GPU attached, as well as nvidia-docker. 
 
-You could host anywhere once the image is build, but for convenience-sake, there are commands provided to deploy to Kubernetes Engine on Google Cloud.
+You could host anywhere once the image is built, but for convenience-sake, there are commands provided to deploy to Kubernetes Engine on Google Cloud.
 
 
 ## Install dependencies

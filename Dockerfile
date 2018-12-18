@@ -95,11 +95,10 @@ COPY ./ /app
 COPY run-flownet-many.py /flownet2/flownet2/scripts/run-flownet-many.py
 
 # gsutil for dev stuff
-RUN export CLOUD_SDK_REPO="cloud-sdk-$(lsb_release -c -s)" && \
-    echo "deb http://packages.cloud.google.com/apt $CLOUD_SDK_REPO main" | tee -a /etc/apt/sources.list.d/google-cloud-sdk.list && \
-    curl https://packages.cloud.google.com/apt/doc/apt-key.gpg | apt-key add - && \
-    apt-get update -y && apt-get install google-cloud-sdk -y
+# RUN export CLOUD_SDK_REPO="cloud-sdk-$(lsb_release -c -s)" && \
+#     echo "deb http://packages.cloud.google.com/apt $CLOUD_SDK_REPO main" | tee -a /etc/apt/sources.list.d/google-cloud-sdk.list && \
+#     curl https://packages.cloud.google.com/apt/doc/apt-key.gpg | apt-key add - && \
+#     apt-get update -y && apt-get install google-cloud-sdk -y
 
-# CMD [ "/app/fav-cli" ]
-# CMD /bin/bash
-CMD tail -f /dev/null
+CMD [ "/app/fav" ]
+# CMD tail -f /dev/null

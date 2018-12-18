@@ -4,8 +4,9 @@
   "description": "",
   "main": "fav",
   "scripts": {
-    "start": "docker run -td --cpus 2 -m 2G -v `pwd`:/io $(./dev/env DOCKER_TAG)",
+    "start": "docker run -td --cpus 2 -m 2G -v `pwd`:/app $(./dev/env DOCKER_TAG) bash",
     "shell": "./dev/docker-shell.sh",
+    "container": "nvidia-docker run --cpus 2 -m 2G -v `pwd`:/io $(./dev/env DOCKER_TAG)",
     "kill": "docker kill $(docker ps -q)",
     "build": "node ./dev/docker-build.js",
     "push": "npm run gcloud:cluster:auth && docker push $(./dev/env DOCKER_TAG)",

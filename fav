@@ -19,28 +19,61 @@ yargs
     .command('$0', 'about', () => {}, about)
     .command('help', 'about', () => {}, about)
     .command('list-models', 'list available pre-trained style models', () => {}, (argv) => {
-        const models = glob.sync('/fast-artistic-videos/models/*.t7')
+        const models = glob.sync('/fast-artistic-videos/models/*video.t7')
         console.log(models)
     })
     .command('stylize', 'apply style to a video', (yargs) => {
         yargs.usage('stylize <video_file_in_cwd> <model_file_name>')
+        yargs.positional('video_file_in_cwd', {
+            description: 'Video file to stylize (needs to be in current working directory or lower).'
+        })
+        yargs.positional('model_file_name', {
+            description: 'Name of the model preset to use. Get a list of options with fav list-models'
+        })
+        yargs.require('video_file_in_cwd')
+        yargs.require('model_file_name')
     }, (argv) => {
+        console.log('!!!', argv)
+        // return 
         const proc = spawn(
             'bash',
             ['./stylizeVideo_flownet.sh', `/io/${argv._[1]}`, `./models/${argv._[2]}`],
             {cwd: '/fast-artistic-videos'}
         )
         // accept defaults for all interactive prompts
-        // TODO expose these options
-        proc.stdin.write('\n') // which gpu
-        proc.stdin.write('\n') // which backend
-        proc.stdin.write('\n') // resolution
-        proc.stdin.write('\n') // overwrite existing
+        proc.stdin.write(argv.gpu) // which gpu
+        proc.stdin.write(argv.backend) // which backend
+        proc.stdin.write(argv.resolution) // resolution
+        proc.stdin.write(argv.overwrite) // overwrite existing
         proc.stdout.on('data', (str) => console.log(str.toString()))
         proc.stderr.on('data', (str) => console.error(str.toString()))
         proc.on('close', (code) => {
-            console.log(`child process exited with code ${code}`)
-            // TODO clean up based on flag
+            console.log(`exited with code ${code}`)
+            // TODO clean up based on flag. 
+            // User would want to keep flow files if they are running the same video with multiple models
         })
+    })
+    .option('r', {
+        alias: ['res', 'resolution'],
+        description: 'Sets the resolution of the output format. e.g. 640:-1. Defaults to resolution of input.',
+        default: '-1:-1',
+    })
+    .option('g', {
+        alias: 'gpu',
+        description: 'Sets the GPU index.',
+        default: 0,
+        choices: [-1, 0, 1, 2, '...']
+    })
+    .option('b', {
+        alias: 'backend',
+        description: 'Sets the backend to use.',
+        default: 'cudnn',
+        choices: ['cudnn', 'nn', 'opencl']
+    })
+    .option('o', {
+        alias: 'overwrite',
+        description: 'Overwrite existing output file?',
+        default: 'y',
+        choices: ['y', 'n'],
     })
     .argv
