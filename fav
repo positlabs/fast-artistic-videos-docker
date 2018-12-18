@@ -2,6 +2,7 @@
 
 const {spawn} = require('child_process')
 const glob = require('glob')
+const path = require('path')
 // https://www.npmjs.com/package/yargs
 const yargs = require('yargs')
 const VERSION = require('./package.json').version
@@ -20,7 +21,7 @@ yargs
     .command('help', 'about', () => {}, about)
     .command('list-models', 'list available pre-trained style models', () => {}, (argv) => {
         const models = glob.sync('/fast-artistic-videos/models/*video.t7')
-        console.log(models)
+        models.map(m => console.log(path.parse(m).base))
     })
     .command('stylize', 'apply style to a video', (yargs) => {
         yargs.usage('stylize <video_file_in_cwd> <model_file_name>')
@@ -33,8 +34,7 @@ yargs
         yargs.require('video_file_in_cwd')
         yargs.require('model_file_name')
     }, (argv) => {
-        console.log('!!!', argv)
-        // return 
+        // console.log(argv)
         const proc = spawn(
             'bash',
             ['./stylizeVideo_flownet.sh', `/io/${argv._[1]}`, `./models/${argv._[2]}`],
