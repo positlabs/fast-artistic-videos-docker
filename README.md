@@ -4,9 +4,9 @@ The goal of this project is to provide a docker image to run [fast-artistic-vide
 
 [![](./demo.gif)](https://www.youtube.com/watch?v=SKql5wkWz8E&t=3m26s)
 
-The goal is speed, so it uses flownet2, cudnn, and stnbhwd. You will need a machine with an nvidia GPU attached, as well as nvidia-docker. 
+Speed is good, so it uses flownet2, cudnn, and stnbhwd. You will need a machine with an nvidia GPU attached, as well as [nvidia-docker](https://github.com/NVIDIA/nvidia-docker).
 
-You could host anywhere once the image is built, but for convenience-sake, there are commands provided to deploy to Kubernetes Engine on Google Cloud.
+You could host anywhere once the image is built, but for convenience-sake, there are commands provided to deploy to [Kubernetes Engine](https://cloud.google.com/kubernetes-engine/) on Google Cloud.
 
 
 ## Install dependencies
@@ -46,9 +46,16 @@ In the root, run `npm run build` to build the main image. It will be tagged base
 
 `npm run deploy`: build and deploy the image to your cluster
 
+
 ## Connect to the GKE container
 
-Connect to the container via ssh. You can get a command by viewing the [compute engine instances](https://console.cloud.google.com/compute/instances) in the cloud console. 
+Connect to the container via ssh. 
+
+`npm run gcloud:cluster:auth` to connect kubectl to the cluster
+
+`kubectl get po` to find the pod id
+
+`kucbectl exec -it <pod_id> bash` to connect to the pod
 
 The container will be running in the background when deployed via npm scripts. You can connect to it and run commands internally. (This is largely for development purposes. In production, there would be a REST API or something similar - which would run the docker command.)
 
@@ -60,24 +67,36 @@ Some useful paths:
 
 - `/fast-artistic-videos`: Slightly modified fork of [fast-artistic-videos](https://github.com/manuelruder/fast-artistic-videos). Makes the prebuilt model host configurable, and outputs to the /io directory
 
-- `/app`: Contents of this repo. There's a test video (mov_bbb.mp4), and a CLI tool (`/app/fav`) that will become the default command for running the container.
+- `/app`: Contents of this repo. There's a test video (mov_bbb.mp4), and a CLI tool (`/app/fav`) that is the default command for running the container.
 
 
-## Run the container directly
+### Running the CLI inside the container
 
-`npm run gcloud:cluster:auth` to connect kubectl to the cluster
-
-`kubectl get po` to find the pod id
-
-`kucbectl exec -it <pod_id> bash` to connect to the pod
-
-
-### Example
-
-Inside the container, you can fake the container mount behavior by moving the video into the /io directory
+Inside the container, you can fake the container mount behavior by copying the video into the /io directory
 
 `cp /app/mov_bbb.mp4 /io/mov_bbb.mp4`
 
 Then you can run the command and stylize the video
 
 `/app/fav stylize mov_bbb.mp4 checkpoint-candy-video.t7`
+
+## Running locally
+
+Because I don't have a local nvidia card, I have been running locally just to poke around the filesystem and test out the CLI.
+
+`npm start` will start the container and keep it running in the background
+
+`npm run shell` will open a bash shell inside the container
+
+If you do have a local nvidia card, you could do something like this, which would run the CLI directly. Note the bind mount, which is needed for the container to have access to the video file.
+
+`nvidia-docker run --mount type=bind,source="$(pwd)",target=/io $(./dev/env DOCKER_TAG) stylize ./mov_bbb.mp4 checkpoint-candy-video.t7`
+
+
+## Commands
+
+List basic help: `docker run $(./dev/env DOCKER_TAG) --help`
+
+Get details on a specific command: `docker run $(./dev/env DOCKER_TAG) stylize --help`
+
+List the prebuilt style models: `docker run $(./dev/env DOCKER_TAG) list-models`

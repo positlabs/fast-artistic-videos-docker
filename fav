@@ -3,17 +3,19 @@
 const {spawn} = require('child_process')
 const glob = require('glob')
 const path = require('path')
-// https://www.npmjs.com/package/yargs
-const yargs = require('yargs')
+const fs = require('fs-extra')
+const yargs = require('yargs') // https://www.npmjs.com/package/yargs
 const VERSION = require('./package.json').version
 
 const about = () => {
     console.log(`\nfav v${VERSION}`)
-    console.log(`\nTo stylize a video: 
-    $ fav stylize ./path/to/video.mp4 model_file_name.t7`)
-    console.log(`\nTo get a list of pretrained models: 
-    $ fav list-models
-    `)
+    console.log(`\nTo stylize a video:`)
+    console.log(`    $ fav stylize ./path/to/video.mp4 model_file_name.t7`)
+    console.log(`\nView documentation for stylize:`)
+    console.log(`    $ fav stylize --help`)
+    console.log(`\nTo get a list of pretrained models:`)
+    console.log(`    $ fav list-models`)
+    console.log('\n')
 }
 
 yargs
@@ -23,34 +25,42 @@ yargs
         const models = glob.sync('/fast-artistic-videos/models/*video.t7')
         models.map(m => console.log(path.parse(m).base))
     })
-    .command('stylize', 'apply style to a video', (yargs) => {
-        yargs.usage('stylize <video_file_in_cwd> <model_file_name>')
-        yargs.positional('video_file_in_cwd', {
-            description: 'Video file to stylize (needs to be in current working directory or lower).'
+    .command('stylize <video_file_in_cwd> <model_file_name>', 'apply style to a video', (yargs) => {
+            yargs.positional('video_file_in_cwd', {
+            description: 'Video file to stylize (needs to be in current working directory or lower).',
         })
         yargs.positional('model_file_name', {
-            description: 'Name of the model preset to use. Get a list of options with fav list-models'
+            description: 'Name of the model preset to use. Get a list of options with fav list-models',
         })
-        yargs.require('video_file_in_cwd')
-        yargs.require('model_file_name')
     }, (argv) => {
-        // console.log(argv)
-        const proc = spawn(
+        const spawnArgs = [
             'bash',
-            ['./stylizeVideo_flownet.sh', `/io/${argv._[1]}`, `./models/${argv._[2]}`],
+            ['./stylizeVideo_flownet.sh', `/io/${argv.video_file_in_cwd}`, `./models/${argv.model_file_name}`],
             {cwd: '/fast-artistic-videos'}
-        )
+        ]
+        console.log(argv, spawnArgs)
+        
+        const proc = spawn(...spawnArgs)
+
+        // TODO check if output file already exists and handle with the --overwrite flag
+        // delete the file if overwrite is true
+        // kill the process if file exists and overwrite is false
+        // fs.statSync()
+
         // accept defaults for all interactive prompts
-        proc.stdin.write(argv.gpu) // which gpu
-        proc.stdin.write(argv.backend) // which backend
-        proc.stdin.write(argv.resolution) // resolution
-        proc.stdin.write(argv.overwrite) // overwrite existing
+        proc.stdin.write(argv.gpu.toString() + '\n') // which gpu
+        proc.stdin.write(argv.backend + '\n') // which backend
+        proc.stdin.write(argv.resolution + '\n') // resolution
+        // proc.stdin.write(argv.overwrite + '\n\n') // overwrite existing
         proc.stdout.on('data', (str) => console.log(str.toString()))
         proc.stderr.on('data', (str) => console.error(str.toString()))
         proc.on('close', (code) => {
             console.log(`exited with code ${code}`)
-            // TODO clean up based on flag. 
+            // clean up based on flag. 
             // User would want to keep flow files if they are running the same video with multiple models
+            if(!argv.keep) {
+                fs.remove(`/io/${path.parse(argv.video_file_in_cwd).name}/`)
+            }
         })
     })
     .option('r', {
@@ -60,9 +70,9 @@ yargs
     })
     .option('g', {
         alias: 'gpu',
-        description: 'Sets the GPU index.',
+        description: 'Sets the GPU index. Use -1 for CPU.',
         default: 0,
-        choices: [-1, 0, 1, 2, '...']
+        choices: [-1, 0, 1, 2, '...'],
     })
     .option('b', {
         alias: 'backend',
@@ -76,4 +86,20 @@ yargs
         default: 'y',
         choices: ['y', 'n'],
     })
+    .option('k', {
+        alias: 'keep',
+        description: 'Keep the process files. Keep if you want to run the same video with different style models.',
+        default: false,
+        type: 'boolean',
+    })
     .argv
+
+// make a zombie process on purpose. useful for deploying the container remotely
+// this should eventually be replaced by a REST API
+if(process.env.ZOMBIE){
+    require('http')
+        .createServer().listen(1234)
+        .on('error', (err) => {
+            // console.error(err)
+        })
+}
