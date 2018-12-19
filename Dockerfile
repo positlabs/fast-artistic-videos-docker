@@ -94,8 +94,5 @@ COPY ./ /app
 # flownet runner modified to recycle the caffe net. WAY faster.
 COPY run-flownet-many.py /flownet2/flownet2/scripts/run-flownet-many.py
 
-ARG ZOMBIE=false
-ENV ZOMBIE=${ZOMBIE}
-
 ENTRYPOINT [ "/app/fav" ]
 # CMD tail -f /dev/null

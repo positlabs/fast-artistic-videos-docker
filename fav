@@ -7,7 +7,7 @@ const fs = require('fs-extra')
 const yargs = require('yargs') // https://www.npmjs.com/package/yargs
 const VERSION = require('./package.json').version
 
-const about = () => {
+const help = () => {
     console.log(`\nfav v${VERSION}`)
     console.log(`\nTo stylize a video:`)
     console.log(`    $ fav stylize ./path/to/video.mp4 model_file_name.t7`)
@@ -36,17 +36,47 @@ yargs
             default: 3030,
         })
     }, startAPI)
-    .command('help', 'help', () => {}, about)
+    .command('help', 'help', () => {}, help)
     .command('list-models', 'list available pre-trained style models', () => {}, (argv) => {
         const models = glob.sync('/fast-artistic-videos/models/*video.t7')
         models.map(m => console.log(path.parse(m).base))
     })
     .command('stylize <video_file_in_cwd> <model_file_name>', 'apply style to a video', (yargs) => {
-            yargs.positional('video_file_in_cwd', {
+        yargs.positional('video_file_in_cwd', {
             description: 'Video file to stylize (needs to be in current working directory or lower).',
         })
         yargs.positional('model_file_name', {
             description: 'Name of the model preset to use. Get a list of options with fav list-models',
+        })
+
+        yargs.option('r', {
+            alias: ['res', 'resolution'],
+            description: 'Sets the resolution of the output format. e.g. 640:-1. Defaults to resolution of input.',
+            default: '-1:-1',
+        })
+        .option('g', {
+            alias: 'gpu',
+            description: 'Sets the GPU index. Use -1 for CPU.',
+            default: 0,
+            choices: [-1, 0, 1, 2, '...'],
+        })
+        .option('b', {
+            alias: 'backend',
+            description: 'Sets the backend to use.',
+            default: 'cudnn',
+            choices: ['cudnn', 'nn', 'opencl']
+        })
+        .option('o', {
+            alias: 'overwrite',
+            description: 'Overwrite existing output file?',
+            default: false,
+            type: 'boolean'
+        })
+        .option('k', {
+            alias: 'keep',
+            description: 'Keep the process files. Keep if you want to run the same video with different style models.',
+            default: false,
+            type: 'boolean',
         })
     }, (argv) => {
         const spawnArgs = [
@@ -54,18 +84,23 @@ yargs
             ['./stylizeVideo_flownet.sh', `/io/${argv.video_file_in_cwd}`, `./models/${argv.model_file_name}`],
             {cwd: '/fast-artistic-videos'}
         ]
-        console.log(argv, spawnArgs)
+        // console.log(argv, spawnArgs)
         
-        // TODO check if output file already exists and handle with the --overwrite flag
+        // check if output file already exists and handle with the --overwrite flag
         // delete the file if overwrite is true
         // kill the process if file exists and overwrite is false
         try{
-            fs.statSync()
+            const vid = path.parse(argv.video_file_in_cwd)
+            const outputPath = `/io/${vid.name}-stylized${vid.ext}`
+            fs.statSync(outputPath)
             // file exists
-            if(argv.overwrite){
-
+            if(argv.overwrite === true){
+                // overwrite
+                fs.remove(outputPath)
             }else{
-
+                // don't overwrite
+                console.log(outputPath, 'exists. Use --overwrite to overwrite it.')
+                return process.exit()
             }
         }catch(e){
             // file doesn't exist. nothing to do.
@@ -77,7 +112,6 @@ yargs
         proc.stdin.write(argv.gpu.toString() + '\n') // which gpu
         proc.stdin.write(argv.backend + '\n') // which backend
         proc.stdin.write(argv.resolution + '\n') // resolution
-        // proc.stdin.write(argv.overwrite + '\n') // overwrite existing
         proc.stdout.on('data', (str) => console.log(str.toString()))
         proc.stderr.on('data', (str) => console.error(str.toString()))
         proc.on('close', (code) => {
@@ -88,34 +122,5 @@ yargs
                 fs.remove(`/io/${path.parse(argv.video_file_in_cwd).name}/`)
             }
         })
-    })
-    .option('r', {
-        alias: ['res', 'resolution'],
-        description: 'Sets the resolution of the output format. e.g. 640:-1. Defaults to resolution of input.',
-        default: '-1:-1',
-    })
-    .option('g', {
-        alias: 'gpu',
-        description: 'Sets the GPU index. Use -1 for CPU.',
-        default: 0,
-        choices: [-1, 0, 1, 2, '...'],
-    })
-    .option('b', {
-        alias: 'backend',
-        description: 'Sets the backend to use.',
-        default: 'cudnn',
-        choices: ['cudnn', 'nn', 'opencl']
-    })
-    .option('o', {
-        alias: 'overwrite',
-        description: 'Overwrite existing output file?',
-        default: 'y',
-        choices: ['y', 'n'],
-    })
-    .option('k', {
-        alias: 'keep',
-        description: 'Keep the process files. Keep if you want to run the same video with different style models.',
-        default: false,
-        type: 'boolean',
     })
     .argv

@@ -42,7 +42,7 @@ spec:
           terminationMessagePolicy: File
           env:
             - name: DATE
-              value: 2018-12-19T01:23:54.354Z
+              value: 2018-12-19T22:44:33.383Z
       dnsPolicy: ClusterFirst
       restartPolicy: Always
       schedulerName: default-scheduler
