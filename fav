@@ -18,9 +18,25 @@ const about = () => {
     console.log('\n')
 }
 
+const startAPI = (argv) => {
+    const port = argv.port || process.env.PORT
+    console.log(`Starting fav API on port ${port}`)
+    require('http')
+        .createServer()
+        .listen(port)
+        .on('error', (err) => {
+            console.error(err)
+        })
+}
+
 yargs
-    .command('$0', 'about', () => {}, about)
-    .command('help', 'about', () => {}, about)
+    .command('$0', 'Start the API', (yargs) => {
+        yargs.option('p', {
+            alias: 'port',
+            default: 3030,
+        })
+    }, startAPI)
+    .command('help', 'help', () => {}, about)
     .command('list-models', 'list available pre-trained style models', () => {}, (argv) => {
         const models = glob.sync('/fast-artistic-videos/models/*video.t7')
         models.map(m => console.log(path.parse(m).base))
@@ -40,18 +56,28 @@ yargs
         ]
         console.log(argv, spawnArgs)
         
-        const proc = spawn(...spawnArgs)
-
         // TODO check if output file already exists and handle with the --overwrite flag
         // delete the file if overwrite is true
         // kill the process if file exists and overwrite is false
-        // fs.statSync()
+        try{
+            fs.statSync()
+            // file exists
+            if(argv.overwrite){
+
+            }else{
+
+            }
+        }catch(e){
+            // file doesn't exist. nothing to do.
+        }
+
+        const proc = spawn(...spawnArgs)
 
         // accept defaults for all interactive prompts
         proc.stdin.write(argv.gpu.toString() + '\n') // which gpu
         proc.stdin.write(argv.backend + '\n') // which backend
         proc.stdin.write(argv.resolution + '\n') // resolution
-        // proc.stdin.write(argv.overwrite + '\n\n') // overwrite existing
+        // proc.stdin.write(argv.overwrite + '\n') // overwrite existing
         proc.stdout.on('data', (str) => console.log(str.toString()))
         proc.stderr.on('data', (str) => console.error(str.toString()))
         proc.on('close', (code) => {
@@ -93,13 +119,3 @@ yargs
         type: 'boolean',
     })
     .argv
-
-// make a zombie process on purpose. useful for deploying the container remotely
-// this should eventually be replaced by a REST API
-if(process.env.ZOMBIE){
-    require('http')
-        .createServer().listen(1234)
-        .on('error', (err) => {
-            // console.error(err)
-        })
-}
