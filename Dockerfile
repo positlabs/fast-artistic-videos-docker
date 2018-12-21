@@ -56,7 +56,8 @@ RUN curl -sL https://deb.nodesource.com/setup_10.x | sudo bash -; \
 
 # clone fast-artistic-videos
 RUN mkdir /fast-artistic-videos && \
-    git clone -b dev https://github.com/positlabs/fast-artistic-videos.git /fast-artistic-videos
+    git clone https://github.com/positlabs/fast-artistic-videos.git /fast-artistic-videos
+    # git clone -b dev https://github.com/positlabs/fast-artistic-videos.git /fast-artistic-videos
 
 # grab paths from build args
 ARG FAV_MODELS_ROOT
